@@ -714,6 +714,16 @@ function registerDeleteTool(
   );
 }
 
+// Map OData operators to CDS/SQL
+const ODATA_TO_CDS_OPERATORS = new Map<string, string>([
+  ["eq", "="],
+  ["ne", "!="],
+  ["gt", ">"],
+  ["ge", ">="],
+  ["lt", "<"],
+  ["le", "<="],
+]);
+
 // Helper: compile structured inputs into a CDS query
 // The function translates the validated MCP input into CQN safely,
 // including a basic escape of string literals to avoid invalid syntax.
@@ -771,9 +781,12 @@ function buildQuery(
         typeof value === "string"
           ? `'${String(value).replace(/'/g, "''")}'`
           : String(value);
+
+      // Use the operator mapping for cleaner and more maintainable code
+      const cdsOp = ODATA_TO_CDS_OPERATORS.get(op) ?? op;
       const expr = ["contains", "startswith", "endswith"].includes(op)
         ? `${op}(${field}, ${lit})`
-        : `${field} ${op} ${lit}`;
+        : `${field} ${cdsOp} ${lit}`;
       ands.push(CDS.parse.expr(expr));
     }
 
